@@ -6,6 +6,9 @@ export class Test {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: false })
+  title: string;
+  
   @Column()
   subject: string;
 

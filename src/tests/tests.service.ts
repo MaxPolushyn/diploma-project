@@ -18,20 +18,36 @@ export class TestsService {
     private readonly answerRepository: Repository<Answer>,
   ) {}
 
-  async createTest(subject: string, questions: { text: string; answers: { text: string; isCorrect: boolean }[] }[]): Promise<Test> {
-    const test = this.testRepository.create({ subject });
+  async createTest(title: string, subject: string, questions: any[]): Promise<Test> {
+    const test = this.testRepository.create({ title, subject });
     await this.testRepository.save(test);
-
+  
     for (const questionData of questions) {
-      const question = await this.createQuestion(test.id, questionData.text);
-
+      const question = this.questionRepository.create({ text: questionData.text, test });
+      await this.questionRepository.save(question);
+  
       for (const answerData of questionData.answers) {
-        await this.createAnswer(question.id, answerData.text, answerData.isCorrect);
+        const answer = this.answerRepository.create({
+          text: answerData.text,
+          isCorrect: answerData.isCorrect,
+          question,
+        });
+        await this.answerRepository.save(answer);
       }
     }
-
-    return test;
+  
+    const savedTest = await this.testRepository.findOne({
+      where: { id: test.id },
+      relations: ['questions', 'questions.answers'],
+    });
+  
+    if (!savedTest) {
+      throw new Error('Test not found after saving');
+    }
+  
+    return savedTest;
   }
+  
 
   async getAllTests(): Promise<Test[]> {
     return this.testRepository.find({ relations: ['questions', 'questions.answers'] });
@@ -65,6 +81,8 @@ async createAnswer(questionId: number, text: string, isCorrect: boolean): Promis
   const answer = this.answerRepository.create({ text, isCorrect, question });
   return this.answerRepository.save(answer);
 }
-
+async deleteQuestion(questionId: number): Promise<void> {
+  await this.questionRepository.delete(questionId);
+}
 
 }

@@ -23,7 +23,7 @@ import { TestsModule } from './tests/tests.module';
         database: configService.get('DB_NAME'),
         entities: [join(process.cwd(), 'dist/**/*.entity{.ts,.js}')],
         synchronize:true,
-        logging: true,
+        
       })
     }),
     TestsModule
